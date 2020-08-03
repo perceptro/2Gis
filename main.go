@@ -65,6 +65,7 @@ func getValidateKeyValue(str_orig string) string {
 
 	return result_str
 }
+
 /*
 Формируем список товаров
 */
@@ -93,13 +94,26 @@ func getListGoods(file_name string) map[string]Goods {
 		good.Good_price = 0
 
 		if (len(strings.Split(scanner.Text(), ";"))) != 3 {
-			fmt.Printf("Error! Structure of the string does not match expected: \"%s\"\n", scanner.Text())
+			fmt.Printf("Warning! Structure of the string does not match expected: \"%s\". File name: %s\n", scanner.Text(), file_name)
+			fmt.Println("Skip this row\n---")
 			continue
 		}
 
 		good.Good_name = strings.Split(scanner.Text(), ";")[0]
 		good.Good_description = strings.Split(scanner.Text(), ";")[1]
-		good.Good_price, _ = strconv.ParseFloat(strings.Split(scanner.Text(), ";")[2], 64)
+		good.Good_price, err = strconv.ParseFloat(strings.Split(scanner.Text(), ";")[2], 64)
+
+		if err != nil {
+			fmt.Printf("Warning! Bad price value in str: \"%s\". File name: %s\n", scanner.Text(), file_name)
+			fmt.Println("Set default value \"0.0\"\n---")
+		}
+
+		if good.Good_name == "" {
+			fmt.Printf("Warning! Empty name in str: \"%s\". File name: %s\n", scanner.Text(), file_name)
+			fmt.Println("Skip this row\n---")
+			continue
+		}
+
 		key_value = getValidateKeyValue(good.Good_name)
 
 		list_goods[key_value] = good
@@ -108,12 +122,14 @@ func getListGoods(file_name string) map[string]Goods {
 
 	return list_goods
 }
+
 /*
 Проверка на различие (тип string)
 */
 func strCheckForDissimilarity(str1, str2 string) bool {
 	return str1 != str2
 }
+
 /*
 Проверка на различие (тип float)
 */
@@ -129,7 +145,7 @@ old_list - список старых товаров
 new_list - список новых товаров
 name_attr - имя измененного атрибута
 */
-func DisplayUpdates(hex_key string, good UpdateGood, old_list, new_list map[string]Goods, name_attr string) {
+func DisplayUpdates(hex_key string, old_list, new_list map[string]Goods, name_attr string) {
 	fmt.Printf("\tUpdate %s:\n", name_attr)
 
 	switch name_attr {
@@ -242,17 +258,17 @@ func main() {
 			fmt.Printf("For good \"%s\":\n", list_goods_old[hex_key].Good_name)
 
 			if good.Is_name_update {
-				DisplayUpdates(hex_key, good, list_goods_old, list_goods_new, "name")
+				DisplayUpdates(hex_key, list_goods_old, list_goods_new, "name")
 				list_attr_updates = append(list_attr_updates, "name")
 			}
 
 			if good.Is_description_update {
-				DisplayUpdates(hex_key, good, list_goods_old, list_goods_new, "description")
+				DisplayUpdates(hex_key, list_goods_old, list_goods_new, "description")
 				list_attr_updates = append(list_attr_updates, "description")
 			}
 
 			if good.Is_price_update {
-				DisplayUpdates(hex_key, good, list_goods_old, list_goods_new, "price")
+				DisplayUpdates(hex_key, list_goods_old, list_goods_new, "price")
 				list_attr_updates = append(list_attr_updates, "price")
 			}
 
